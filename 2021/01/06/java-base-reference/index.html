@@ -8,15 +8,15 @@
   <link rel="dns-prefetch" href="http://example.com">
   <title>java-base-reference | 大白菜</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用 强引用：强引用存在时，对象就不会被GC回收掉，Jvm宁愿抛出OOM异常，也不会在GC时回收掉该对象。 测试代码： 123456789101112131415161718192021222324byte[] arr &#x3D; null;byte[] arr2 &#x3D; null;try &amp;#123;">
+  <meta name="description" content="Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java-base-reference">
 <meta property="og:url" content="http://example.com/2021/01/06/java-base-reference/index.html">
 <meta property="og:site_name" content="大白菜">
-<meta property="og:description" content="Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用 强引用：强引用存在时，对象就不会被GC回收掉，Jvm宁愿抛出OOM异常，也不会在GC时回收掉该对象。 测试代码： 123456789101112131415161718192021222324byte[] arr &#x3D; null;byte[] arr2 &#x3D; null;try &amp;#123;">
+<meta property="og:description" content="Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-01-06T01:38:30.000Z">
-<meta property="article:modified_time" content="2021-01-06T03:39:34.860Z">
+<meta property="article:modified_time" content="2021-01-07T15:14:22.340Z">
 <meta property="article:author" content="Shixiong Zhan">
 <meta property="article:tag" content="Java">
 <meta name="twitter:card" content="summary">
@@ -175,7 +175,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="Java对象引用的4个级别：强引用-gt-软引用-gt-弱引用-gt-虚引用"><a href="#Java对象引用的4个级别：强引用-gt-软引用-gt-弱引用-gt-虚引用" class="headerlink" title="Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用"></a>Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用</h3><hr>
+        <h3 id="Java对象引用的4个级别：强引用-gt-软引用-gt-弱引用-gt-虚引用"><a href="#Java对象引用的4个级别：强引用-gt-软引用-gt-弱引用-gt-虚引用" class="headerlink" title="Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用"></a>Java对象引用的4个级别：强引用 &gt; 软引用 &gt; 弱引用 &gt; 虚引用</h3><a id="more"></a>
 <h4 id="强引用："><a href="#强引用：" class="headerlink" title="强引用："></a>强引用：</h4><p><strong><em>强引用存在时，对象就不会被GC回收掉，Jvm宁愿抛出OOM异常，也不会在GC时回收掉该对象。</em></strong></p>
 <p>测试代码：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">byte[] arr &#x3D; null;</span><br><span class="line">byte[] arr2 &#x3D; null;</span><br><span class="line">try &#123;</span><br><span class="line">    arr &#x3D; new byte[1024 * 1024 * 12];</span><br><span class="line">    &#x2F;&#x2F; arr：(有值)</span><br><span class="line">    System.out.println(&quot;arr new: &quot; + arr);</span><br><span class="line">    &#x2F;&#x2F; 通知jvm gc</span><br><span class="line">    System.gc();</span><br><span class="line">    &#x2F;&#x2F; 这里睡2s是为了保证gc能执行完成</span><br><span class="line">    Thread.sleep(2000);</span><br><span class="line">    &#x2F;&#x2F; arr：gc是不能直接回收的，(有值)</span><br><span class="line">    System.out.println(&quot;arr after gc: &quot; + arr);</span><br><span class="line">    &#x2F;&#x2F; 设置最大堆空间为20M，这个会由于申请不到内存直接OOM</span><br><span class="line">    arr2 &#x3D; new byte[1024 * 1024 * 12];</span><br><span class="line">    &#x2F;&#x2F; arr2：(无法输出)</span><br><span class="line">    System.out.println(&quot;arr2 new: &quot; + arr2);</span><br><span class="line">&#125; catch (Exception e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; finally &#123;</span><br><span class="line">    &#x2F;&#x2F; arr：gc没有回收，(有值)</span><br><span class="line">    System.out.println(&quot;arr final: &quot; + arr);</span><br><span class="line">    &#x2F;&#x2F; arr2：申请不到内存，(无值)</span><br><span class="line">    System.out.println(&quot;arr2 final: &quot; + arr2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
