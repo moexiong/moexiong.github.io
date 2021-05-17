@@ -1,0 +1,101 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="熊猫菌"><meta name="copyright" content="熊猫菌"><meta name="generator" content="Hexo 5.3.0"><meta name="theme" content="hexo-theme-yun"><title>LVS 简单配置 | 熊猫菌的小站</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_j5gk85dg4pf.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link rel="icon" href="/yun.svg"><link rel="mask-icon" href="/yun.svg" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"github.com","root":"/","title":"熊猫菌的小站","version":"1.6.1","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://el-bot-api.vercel.app/api/words/young"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-121354150-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-121354150-1');
+}</script><script data-ad-client="ca-pub-2245427233262012" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(function(){
+  var bp = document.createElement('script');
+  var curProtocol = window.location.protocol.split(':')[0];
+  if (curProtocol === 'https') {
+    bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+  }
+  else {
+    bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+  }
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(bp, s);
+})();</script><!-- Google Tag Manager --><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-M9KWR9L');</script><!-- End Google Tag Manager --><meta name="description" content="LVS基础配置，不用KeepAlived时的配置过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LVS 简单配置">
+<meta property="og:url" content="https://github.com/moexiong/moexiong.github.io/tree/master/2021/05/17/LVS%20%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/index.html">
+<meta property="og:site_name" content="熊猫菌的小站">
+<meta property="og:description" content="LVS基础配置，不用KeepAlived时的配置过程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://github.com/images/Clipboard_2021-05-17-22-12-52.png">
+<meta property="article:published_time" content="2021-05-17T15:58:06.024Z">
+<meta property="article:modified_time" content="2021-05-17T15:59:38.145Z">
+<meta property="article:author" content="熊猫菌">
+<meta property="article:tag" content="实践过程">
+<meta property="article:tag" content="LVS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/images/Clipboard_2021-05-17-22-12-52.png"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="熊猫菌"><img width="96" loading="lazy" src="/images/avatar.jpeg" alt="熊猫菌"><span class="site-author-status" title="just do it!">🌑</span></a><div class="site-author-name"><a href="/about/">熊猫菌</a></div><a class="site-name" href="/about/site.html">熊猫菌的小站</a><sub class="site-subtitle">加油，打工人！</sub><div class="site-desciption">站在巨人的肩膀上！</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">6</span></a></div><div class="site-state-item"><a href="/categories/"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><div class="site-state-item"><a href="/tags/"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">9</span></a></div><a class="site-state-item hty-icon-button" href="/about/#comment" title="留言板"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-clipboard-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/moexiong" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://music.163.com/#/user/home?id=388541091" title="网易云音乐" target="_blank" style="color:#C10D0C"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-netease-cloud-music-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://www.zhihu.com/people/xiao-xiong-mao-37-50" title="知乎" target="_blank" style="color:#0084FF"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-zhihu-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/53834406" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/stores/" title="不万能的口袋" style="color:gray"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-open-arm-line"></use></svg></a><a class="links-item hty-icon-button" href="/links/" title="膜拜的大佬们" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-genderless-line"></use></svg></a><a class="links-item hty-icon-button" href="/girls/" title="喜欢的女孩子" style="color:hotpink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#LVS-%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">LVS 简单配置</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#DR%E6%A8%A1%E5%BC%8F%E9%85%8D%E7%BD%AE"><span class="toc-number">1.1.</span> <span class="toc-text">DR模式配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#VIP%E9%9A%90%E8%97%8F"><span class="toc-number">1.1.1.</span> <span class="toc-text">VIP隐藏</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ARP-MAC%E9%85%8D%E7%BD%AE"><span class="toc-number">1.1.2.</span> <span class="toc-text">ARP MAC配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%94%E7%A4%BA%E9%85%8D%E7%BD%AE"><span class="toc-number">1.1.3.</span> <span class="toc-text">演示配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">1.2.</span> <span class="toc-text">小结</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://github.com/moexiong/moexiong.github.io/tree/master/2021/05/17/LVS%20%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="熊猫菌"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="熊猫菌的小站"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">LVS 简单配置</h1><div class="post-meta"><div class="post-time" style="display:inline-block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2021-05-17 23:58:06" itemprop="dateCreated datePublished" datetime="2021-05-17T23:58:06+08:00">2021-05-17</time></div><span class="leancloud_visitors" id="/2021/05/17/LVS%20%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/" data-flag-title="LVS 简单配置"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><span class="post-meta-divider">-</span><a href="#comment"><span class="post-meta-item-icon" title="评论数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-chat-3-line"></use></svg> <span class="waline-comment-count" id="/2021/05/17/LVS%20%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/"></span></span></a><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category-item" href="/categories/%E8%B4%9F%E8%BD%BD%E8%B0%83%E5%BA%A6%E5%99%A8/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">负载调度器</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag-item" href="/tags/%E5%AE%9E%E8%B7%B5%E8%BF%87%E7%A8%8B/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">实践过程</span></a><a class="tag-item" href="/tags/LVS/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">LVS</span></a></span></div><div class="post-author"><span class="author-name">熊猫菌</span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h1 id="LVS-简单配置"><a href="#LVS-简单配置" class="headerlink" title="LVS 简单配置"></a>LVS 简单配置</h1><h2 id="DR模式配置"><a href="#DR模式配置" class="headerlink" title="DR模式配置"></a>DR模式配置</h2><p>DR模式的配置关键点：</p>
+<blockquote>
+<ul>
+<li>局域网VIP隐藏</li>
+<li>MAC修改转发</li>
+</ul>
+</blockquote>
+<h3 id="VIP隐藏"><a href="#VIP隐藏" class="headerlink" title="VIP隐藏"></a>VIP隐藏</h3><blockquote>
+<p>网卡配置多IP(注意掩码位)：</p>
+<ol>
+<li>ifconfig [网卡名]:[接口号] [IP地址] [netmask] [掩码地址]</li>
+<li>ifconfig [网卡名]:[接口号] [IP地址]/[掩码位]</li>
+</ol>
+<p>移除配置：</p>
+<ol>
+<li>ifconfig [网卡名]:[接口号] down</li>
+</ol>
+<p>LVS的掩码地址为255.255.255.0是为了能正确接收局域网中交换机发送的数据包。<br>其他服务器的掩码要为255.255.255.255是为了避免其eth0网卡与lo网卡的netmask都是255.255.255.0，导致2块网卡识别的网络号都是192.168.180.*，数据包从最近的网卡lo发送，目的是要从eth0网卡出去。</p>
+</blockquote>
+<h3 id="ARP-MAC配置"><a href="#ARP-MAC配置" class="headerlink" title="ARP MAC配置"></a>ARP MAC配置</h3><p>修改kernel parameter，主要目录<code>/proc/sys/net/ipv4/conf/[all/ens32/lo/default]</code>：<br><code>arp_ignore</code>：定义接收到arp请求时的响应级别。</p>
+<blockquote>
+<ul>
+<li>0：只要本地配置的有相应地址，就给予响应。(默认)</li>
+<li>1：仅在请求的目标MAC地址配置请求到达的接口上的时候，才会给予响应。</li>
+</ul>
+<p>访问受限，不能写，直接利用重定向变更值。变更<code>[eth0/all]</code>2个网卡配置。</p>
+</blockquote>
+<p><code>arp_announce</code>：定义将自己地址向外通告时的通告级别。</p>
+<blockquote>
+<ul>
+<li>0：将本地任何接口上的任何地址向外通告。(默认)</li>
+<li>1：试图仅向目标网络通告与其网络匹配的地址。</li>
+<li>2：仅向与本地接口上的地址匹配的网络地址通告。</li>
+</ul>
+<p>访问受限，不能写，直接利用重定向变更值。变更<code>[eth0/all]</code>2个网卡配置。</p>
+</blockquote>
+<h3 id="演示配置"><a href="#演示配置" class="headerlink" title="演示配置"></a>演示配置</h3><p>windows上配置演示：<br><img src="/images/Clipboard_2021-05-17-22-12-52.png" alt="配置演示" loading="lazy"></p>
+<blockquote>
+<ol>
+<li>yum install -y ipvsadm：安装lvs</li>
+<li>ipvsadm -A -t 192.168.180.233:80 -s rr：配置入口规则t=tcp，rr=轮询负载</li>
+<li>ipvsadm -a -t 192.168.180.233:80 -r 192.168.180.182 -g -w 1：r=重定向，w[数字]=权重</li>
+<li>ipvsadm -a -t 192.168.180.233:80 -r 192.168.180.183 -g -w 1：配置lvs到2台机器的负载映射</li>
+<li>ipvsadm -ln：查看lvs配置路由规则，加参数c=查看路由记录表</li>
+</ol>
+<p>映射的规则配置是为了获取到对应机器的MAC地址，方便LVS修改MAC后转发数据包。</p>
+</blockquote>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>啊这，难搞。<blockquote>
+<p>那就用keepAlived吧，简化LVS的配置，并提供高可用保证。</p>
+</blockquote>
+</li>
+</ol>
+</div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>熊猫菌</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://github.com/moexiong/moexiong.github.io/tree/master/2021/05/17/LVS%20%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/" title="LVS 简单配置">https://github.com/moexiong/moexiong.github.io/tree/master/2021/05/17/LVS%20%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"></div><div class="post-nav-item"><a class="post-nav-next" href="/2021/05/17/LVS%20KeepAlived%E9%AB%98%E5%8F%AF%E7%94%A8%E6%96%B9%E6%A1%88/" rel="next" title="LVS KeepAlived高可用方案"><span class="post-nav-text">LVS KeepAlived高可用方案</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span>如果您有任何关于博客内容的相关讨论，欢迎前往 <a href="https://github.com/moexiong/moexiong.github.io" target="_blank">GitHub Home</a> 与我交流。</span><br></div><div id="waline"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/@waline/client/dist/Waline.min.js", () => {
+  const walineConfig = {"enable":true,"serverURL":"https://moexiong.cn","comment":true,"visitor":true,"placeholder":"填写邮箱，可以收到回复通知哦～","requiredFields":["nick"],"el":"#waline","lang":"zh-CN"}
+  walineConfig.path = "/2021/05/17/LVS%20%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE/"
+  new Waline(walineConfig)
+}, window.Waline);</script></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 熊猫菌</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.3.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.6.1</span></div></footer><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>
