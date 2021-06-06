@@ -189,7 +189,7 @@ body::before {
   width: 100%;
   height: 100%;
   z-index: -1;
-  background-image: url("/images/light_bg.jpg");
+  background-image: url("/images/theme/light_bg.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1756,7 +1756,7 @@ input {
   left: 0;
   width: 20rem;
   background-color: #fff;
-  background-image: url("/images/sider_bg.jpg");
+  background-image: url("/images/theme/sider_bg.jpg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: bottom 3rem center;
@@ -2021,7 +2021,7 @@ input {
     color: var(--hty-text-color);
   }
   :root:not([data-user-color-scheme]) body::before {
-    background-image: url("/images/dark_bg.jpg");
+    background-image: url("/images/theme/dark_bg.jpg");
   }
   :root:not([data-user-color-scheme]) .char {
     background-color: rgba(0,0,0,0.5);
@@ -2097,7 +2097,7 @@ input {
   color: var(--hty-text-color);
 }
 [data-user-color-scheme='dark'] body::before {
-  background-image: url("/images/dark_bg.jpg");
+  background-image: url("/images/theme/dark_bg.jpg");
 }
 [data-user-color-scheme='dark'] .char {
   background-color: rgba(0,0,0,0.5);
